@@ -260,7 +260,7 @@ export class GameManager extends Component {
 
     updateScore(newScore: number) {
         this.score = newScore;
-        this.scoreLabel.string = `Score: ${this.score}`;
+        this.scoreLabel.string = `${this.score}`;
     }
 
     checkGameOver(): boolean {
