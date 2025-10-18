@@ -6,6 +6,19 @@
   "files": [],
   "subMetas": {},
   "userData": {
-    "isBundle": true
+    "isBundle": true,
+    "bundleFilterConfig": [
+      {
+        "range": "include",
+        "type": "url",
+        "patchOption": {
+          "patchType": "glob",
+          "value": "db://assets/fonts/**/*"
+        },
+        "assets": [
+          ""
+        ]
+      }
+    ]
   }
 }
