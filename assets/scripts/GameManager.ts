@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys } from 'cc';
+import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys, tween, Vec3 } from 'cc';
 import { Block } from './Block';
 import { SwipeDirection } from './InputManager';
 import { BlockPool } from './BlockPool';
@@ -38,6 +38,7 @@ export class GameManager extends Component {
     private score: number = 0;
     private highScore: number = 0;
     private isGameOver: boolean = false;
+    private isMoving: boolean = false;
 
     start() {
         this.inputManagerNode.on('swipe-detected', this.handleSwipe, this);
@@ -123,27 +124,45 @@ export class GameManager extends Component {
         blockComp.row = pos.row;
         blockComp.col = pos.col;
         this.blocks[pos.row][pos.col] = blockComp;
-        this.updateBlockPosition(blockComp);
+        this.updateBlockPosition(blockComp, false);
     }
 
     handleSwipe(direction: SwipeDirection) {
-        if (this.isGameOver) return;
+        // Nếu đang di chuyển hoặc đã thua thì không làm gì cả
+        if (this.isMoving || this.isGameOver) return;
+
         if (this.moveBlocks(direction)) {
+            // Đánh dấu là đang di chuyển để chặn input
+            this.isMoving = true;
+
             this.scheduleOnce(() => {
                 this.checkAndClearLines();
                 this.spawnNewBlock();
                 this.checkGameOver();
-            }, 0.2);
+
+                // Sau khi mọi thứ hoàn tất, cho phép input trở lại
+                this.isMoving = false;
+            }, 0.2); // Tăng thời gian chờ lên một chút để khớp với animation
         }
     }
-
-    updateBlockPosition(blockComp: Block) {
+    updateBlockPosition(blockComp: Block, isAnimated: boolean = true) {
         const boardActualWidth = this.boardSize * (this.cellSize + this.spacing) - this.spacing;
         const startX = -boardActualWidth / 2 + this.cellSize / 2;
         const startY = boardActualWidth / 2 - this.cellSize / 2;
-        const x = startX + blockComp.col * (this.cellSize + this.spacing);
-        const y = startY - blockComp.row * (this.cellSize + this.spacing);
-        blockComp.node.setPosition(v3(x, y));
+        const targetX = startX + blockComp.col * (this.cellSize + this.spacing);
+        const targetY = startY - blockComp.row * (this.cellSize + this.spacing);
+
+        const targetPosition = new Vec3(targetX, targetY, 0);
+
+        if (isAnimated) {
+            // Sử dụng tween để di chuyển mượt mà
+            tween(blockComp.node)
+                .to(0.1, { position: targetPosition }, { easing: 'cubicOut' }) // Di chuyển trong 0.1 giây
+                .start();
+        } else {
+            // Đặt vị trí ngay lập tức (dùng khi bắt đầu game)
+            blockComp.node.setPosition(targetPosition);
+        }
     }
 
     moveBlocks(direction: SwipeDirection): boolean {
@@ -164,7 +183,7 @@ export class GameManager extends Component {
                 this.blocks[row][col] = null;
                 block.row = lastEmptyRow;
                 block.col = lastEmptyCol;
-                this.updateBlockPosition(block);
+                this.updateBlockPosition(block, true);
                 hasMoved = true;
             }
         };
