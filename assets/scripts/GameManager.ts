@@ -3,6 +3,7 @@ import { Block } from './Block';
 import { SwipeDirection } from './InputManager';
 import { BlockPool } from './BlockPool';
 import { GameOverUI } from './GameOverUI';
+import { EffectPool } from './EffectPool';
 
 const { ccclass, property } = _decorator;
 
@@ -31,6 +32,9 @@ export class GameManager extends Component {
 
     @property
     initialBlockCount: number = 3;
+
+    @property(EffectPool)
+    effectPool: EffectPool = null;
 
     private cellSize: number = 0;
     private spacing: number = 0;
@@ -124,7 +128,18 @@ export class GameManager extends Component {
         blockComp.row = pos.row;
         blockComp.col = pos.col;
         this.blocks[pos.row][pos.col] = blockComp;
+
+        // Cập nhật vị trí ngay lập tức (không animation)
         this.updateBlockPosition(blockComp, false);
+
+        // THÊM HIỆU ỨNG POP-IN
+        const blockNode = blockComp.node;
+        blockNode.setScale(Vec3.ZERO); // Đặt scale ban đầu là 0
+
+        // Tạo hiệu ứng phóng to ra kích thước bình thường
+        tween(blockNode)
+            .to(0.2, { scale: Vec3.ONE }, { easing: 'backOut' }) // Dùng easing 'backOut' để có hiệu ứng nảy nhẹ
+            .start();
     }
 
     handleSwipe(direction: SwipeDirection) {
@@ -200,11 +215,47 @@ export class GameManager extends Component {
         for (let c = 0; c < this.boardSize; c++) { let isFull = true; for (let r = 0; r < this.boardSize; r++) if (!this.blocks[r][c]) { isFull = false; break; } if (isFull) colsToClear.push(c); }
         let linesCleared = rowsToClear.length + colsToClear.length;
         if (linesCleared > 0) this.updateScore(this.score + (10 * linesCleared * linesCleared));
+        for (let r = 0; r < this.boardSize; r++) { if (this.blocks[r] && this.blocks[r].every(block => !!block)) rowsToClear.push(r); }
+        for (let c = 0; c < this.boardSize; c++) { let isFull = true; for (let r = 0; r < this.boardSize; r++) if (!this.blocks[r][c]) { isFull = false; break; } if (isFull) colsToClear.push(c); }
 
         const nodesToDespawn: Node[] = [];
-        for (const r of rowsToClear) for (let c = 0; c < this.boardSize; c++) if (this.blocks[r][c]) { nodesToDespawn.push(this.blocks[r][c].node); this.blocks[r][c] = null; }
-        for (const c of colsToClear) for (let r = 0; r < this.boardSize; r++) if (this.blocks[r][c]) { if (!nodesToDespawn.includes(this.blocks[r][c].node)) nodesToDespawn.push(this.blocks[r][c].node); this.blocks[r][c] = null; }
-        if (this.blockPool) this.blockPool.despawnMultiple(nodesToDespawn);
+        const uniqueBlocks: Set<Block> = new Set();
+        for (const r of rowsToClear) {
+            for (let c = 0; c < this.boardSize; c++) {
+                if (this.blocks[r][c]) uniqueBlocks.add(this.blocks[r][c]);
+            }
+        }
+        for (const c of colsToClear) {
+            for (let r = 0; r < this.boardSize; r++) {
+                if (this.blocks[r][c]) uniqueBlocks.add(this.blocks[r][c]);
+            }
+        }
+
+        if (uniqueBlocks.size > 0) {
+            // Cập nhật điểm ngay lập tức
+            let linesCleared = rowsToClear.length + colsToClear.length;
+            this.updateScore(this.score + (10 * linesCleared * linesCleared));
+
+            // Chạy hiệu ứng cho từng block
+            uniqueBlocks.forEach(block => {
+                // Đánh dấu ô này đã trống
+                this.blocks[block.row][block.col] = null;
+
+                // 1. Kích hoạt hiệu ứng hạt tại vị trí của block
+                if (this.effectPool) {
+                    this.effectPool.spawn(this.boardNode, block.node.position);
+                }
+
+                // 2. Tạo hiệu ứng thu nhỏ block và trả về pool sau khi xong
+                tween(block.node)
+                    .to(0.2, { scale: Vec3.ZERO }, { easing: 'sineIn' })
+                    .call(() => {
+                        this.blockPool.despawn(block.node);
+                        block.node.setScale(Vec3.ONE); // Reset scale cho lần dùng sau
+                    })
+                    .start();
+            });
+        }
     }
 
     updateScore(newScore: number) {
