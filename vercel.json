@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-        {
-            "source": "/remote/:path*",
-            "destination": "/build/web-mobile/remote/:path*"
-        }
-    ]
-}
