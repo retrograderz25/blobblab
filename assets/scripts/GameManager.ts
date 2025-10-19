@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys, tween, Vec3, director } from 'cc';
+import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys, tween, Vec3, director, Graphics } from 'cc';
 import { Block } from './Block';
 import { SwipeDirection } from './InputManager';
 import { BlockPool } from './BlockPool';
@@ -27,6 +27,8 @@ export class GameManager extends Component {
     @property(GameOverUI) gameOverPanel: GameOverUI = null;
     @property(EffectPool) effectPool: EffectPool = null;
     @property boardSize: number = 8;
+    @property(Node)
+    boardBorder: Node = null;
 
     private cellSize: number = 0;
     private spacing: number = 0;
@@ -109,6 +111,27 @@ export class GameManager extends Component {
                 cell.setPosition(v3(x, y));
                 this.blocks[row][col] = null;
             }
+        }
+        if (this.boardBorder) {
+            let graphics = this.boardBorder.getComponent(Graphics);
+            if (!graphics) {
+                graphics = this.boardBorder.addComponent(Graphics);
+            }
+
+            // Dọn dẹp hình vẽ cũ (nếu có)
+            graphics.clear();
+
+            // Thiết lập màu và độ dày của viền
+            graphics.strokeColor.set(150, 150, 150, 255); // Màu xám nhạt, bạn có thể đổi
+            graphics.lineWidth = this.spacing; // Độ dày bằng với khoảng trống giữa các ô
+
+            // Vẽ hình chữ nhật
+            const width = this.boardNode.getComponent(UITransform).width;
+            const height = this.boardNode.getComponent(UITransform).height;
+            graphics.rect(-width / 2, -height / 2, width, height);
+
+            // Thực hiện vẽ
+            graphics.stroke();
         }
     }
 
@@ -375,20 +398,58 @@ export class GameManager extends Component {
                 const block = this.blocks[r][c];
                 if (!block) continue;
 
+                // Kiểm tra 4 ô xung quanh
                 const topBlock = (r > 0) ? this.blocks[r - 1][c] : null;
                 const bottomBlock = (r < this.boardSize - 1) ? this.blocks[r + 1][c] : null;
                 const leftBlock = (c > 0) ? this.blocks[r][c - 1] : null;
                 const rightBlock = (c < this.boardSize - 1) ? this.blocks[r][c + 1] : null;
 
-                let showTop = !topBlock || topBlock.parentShape.id !== block.parentShape.id;
-                let showBottom = !bottomBlock || bottomBlock.parentShape.id !== block.parentShape.id;
-                let showLeft = !leftBlock || leftBlock.parentShape.id !== block.parentShape.id;
-                let showRight = !rightBlock || rightBlock.parentShape.id !== block.parentShape.id;
+                // LOGIC ĐẢO NGƯỢC
+                // Mặc định, tất cả các viền đều TẮT (không hiển thị khoảng trống)
+                let showTop = false;
+                let showBottom = false;
+                let showLeft = false;
+                let showRight = false;
+
+                // Chỉ BẬT viền nếu ô bên cạnh tồn tại VÀ thuộc cùng một Shape
+                if (topBlock && topBlock.parentShape.id === block.parentShape.id) {
+                    showTop = true;
+                }
+                if (bottomBlock && bottomBlock.parentShape.id === block.parentShape.id) {
+                    showBottom = true;
+                }
+                if (leftBlock && leftBlock.parentShape.id === block.parentShape.id) {
+                    showLeft = true;
+                }
+                if (rightBlock && rightBlock.parentShape.id === block.parentShape.id) {
+                    showRight = true;
+                }
 
                 block.updateBorders(showTop, showBottom, showLeft, showRight);
             }
         }
     }
+
+    // updateAllBorders() {
+    //     for (let r = 0; r < this.boardSize; r++) {
+    //         for (let c = 0; c < this.boardSize; c++) {
+    //             const block = this.blocks[r][c];
+    //             if (!block) continue;
+
+    //             const topBlock = (r > 0) ? this.blocks[r - 1][c] : null;
+    //             const bottomBlock = (r < this.boardSize - 1) ? this.blocks[r + 1][c] : null;
+    //             const leftBlock = (c > 0) ? this.blocks[r][c - 1] : null;
+    //             const rightBlock = (c < this.boardSize - 1) ? this.blocks[r][c + 1] : null;
+
+    //             let showTop = !topBlock || topBlock.parentShape.id !== block.parentShape.id;
+    //             let showBottom = !bottomBlock || bottomBlock.parentShape.id !== block.parentShape.id;
+    //             let showLeft = !leftBlock || leftBlock.parentShape.id !== block.parentShape.id;
+    //             let showRight = !rightBlock || rightBlock.parentShape.id !== block.parentShape.id;
+
+    //             block.updateBorders(showTop, showBottom, showLeft, showRight);
+    //         }
+    //     }
+    // }
 
     checkGameOver(): boolean {
         if (this.isGameOver) return true;

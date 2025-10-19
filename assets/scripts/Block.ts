@@ -49,19 +49,19 @@ export class Block extends Component {
         const borderHeight = height + spacing;
 
         if (this.topBorder) {
-            this.topBorder.getComponent(UITransform).setContentSize(borderWidth, spacing);
+            this.topBorder.getComponent(UITransform).setContentSize(borderWidth * 0.8, spacing / 2);
             this.topBorder.setPosition(0, halfHeight + spacing / 2);
         }
         if (this.bottomBorder) {
-            this.bottomBorder.getComponent(UITransform).setContentSize(borderWidth, spacing);
+            this.bottomBorder.getComponent(UITransform).setContentSize(borderWidth * 0.8, spacing / 2);
             this.bottomBorder.setPosition(0, -halfHeight - spacing / 2);
         }
         if (this.leftBorder) {
-            this.leftBorder.getComponent(UITransform).setContentSize(spacing, borderHeight);
+            this.leftBorder.getComponent(UITransform).setContentSize(spacing / 2, borderHeight * 0.8);
             this.leftBorder.setPosition(-halfWidth - spacing / 2, 0);
         }
         if (this.rightBorder) {
-            this.rightBorder.getComponent(UITransform).setContentSize(spacing, borderHeight);
+            this.rightBorder.getComponent(UITransform).setContentSize(spacing / 2, borderHeight * 0.8);
             this.rightBorder.setPosition(halfWidth + spacing / 2, 0);
         }
     }
