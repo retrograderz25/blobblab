@@ -19,12 +19,7 @@
             "fallbackOptions": {
               "compressionType": "merge_dep"
             },
-            "overwriteSettings": {
-              "web-mobile": {
-                "isRemote": false,
-                "compressionType": "merge_all_json"
-              }
-            }
+            "overwriteSettings": {}
           },
           "miniGame": {
             "fallbackOptions": {
