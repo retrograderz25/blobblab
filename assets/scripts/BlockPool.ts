@@ -45,7 +45,7 @@ export class BlockPool extends Component {
      * @param spriteFrame SpriteFrame cụ thể để áp dụng. Nếu không cung cấp, sẽ chọn ngẫu nhiên.
      * @returns Block component của block được lấy ra
      */
-    spawn(parent: Node, width: number, height: number, spriteFrame?: SpriteFrame): Block {
+    spawn(parent: Node, width: number, height: number, spriteFrame?: SpriteFrame, spacing?: number): Block {
         let blockNode: Node;
 
         if (this.pool.size() > 0) {
@@ -58,6 +58,11 @@ export class BlockPool extends Component {
         const transform = blockNode.getComponent(UITransform);
         if (transform) {
             transform.setContentSize(width, height);
+        }
+
+        const blockComp = blockNode.getComponent(Block);
+        if (blockComp && spacing !== undefined) {
+            blockComp.resizeBorders(spacing);
         }
 
         parent.addChild(blockNode);

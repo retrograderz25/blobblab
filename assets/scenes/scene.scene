@@ -23,7 +23,7 @@
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 29
+      "__id__": 37
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -54,7 +54,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 32
+      "__id__": 40
     },
     "_id": "be30c6cb-27d6-42ee-8c22-63fe001892e4"
   },
@@ -90,18 +90,21 @@
       },
       {
         "__id__": 20
+      },
+      {
+        "__id__": 26
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 26
+        "__id__": 34
       },
       {
-        "__id__": 27
+        "__id__": 35
       },
       {
-        "__id__": 28
+        "__id__": 36
       }
     ],
     "_prefab": null,
@@ -936,6 +939,117 @@
     "customEventData": ""
   },
   {
+    "__type__": "cc.Node",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 2
+    },
+    "_prefab": {
+      "__id__": 27
+    },
+    "__editorExtras__": {}
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {
+      "__id__": 26
+    },
+    "asset": {
+      "__uuid__": "9cf25d67-e1b5-462e-92f6-cfcde4f252bb",
+      "__expectedType__": "cc.Prefab"
+    },
+    "fileId": "246nZ11d5JNabAtMGxVz80",
+    "instance": {
+      "__id__": 28
+    },
+    "targetOverrides": null,
+    "nestedPrefabInstanceRoots": null
+  },
+  {
+    "__type__": "cc.PrefabInstance",
+    "fileId": "a1YSaD/zxP1rT2eoL1XR66",
+    "prefabRootNode": null,
+    "mountedChildren": [],
+    "mountedComponents": [],
+    "propertyOverrides": [
+      {
+        "__id__": 29
+      },
+      {
+        "__id__": 31
+      },
+      {
+        "__id__": 32
+      },
+      {
+        "__id__": 33
+      }
+    ],
+    "removedComponents": []
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 30
+    },
+    "propertyPath": [
+      "_name"
+    ],
+    "value": "GameOverPanel"
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "246nZ11d5JNabAtMGxVz80"
+    ]
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 30
+    },
+    "propertyPath": [
+      "_lpos"
+    ],
+    "value": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 30
+    },
+    "propertyPath": [
+      "_lrot"
+    ],
+    "value": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    }
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 30
+    },
+    "propertyPath": [
+      "_euler"
+    ],
+    "value": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  {
     "__type__": "cc.UITransform",
     "_name": "",
     "_objFlags": 0,
@@ -1011,7 +1125,12 @@
     "instance": null,
     "targetOverrides": [
       {
-        "__id__": 30
+        "__id__": 38
+      }
+    ],
+    "nestedPrefabInstanceRoots": [
+      {
+        "__id__": 26
       }
     ]
   },
@@ -1024,9 +1143,11 @@
     "propertyPath": [
       "gameOverPanel"
     ],
-    "target": null,
+    "target": {
+      "__id__": 26
+    },
     "targetInfo": {
-      "__id__": 31
+      "__id__": 39
     }
   },
   {
@@ -1038,28 +1159,28 @@
   {
     "__type__": "cc.SceneGlobals",
     "ambient": {
-      "__id__": 33
+      "__id__": 41
     },
     "shadows": {
-      "__id__": 34
+      "__id__": 42
     },
     "_skybox": {
-      "__id__": 35
+      "__id__": 43
     },
     "fog": {
-      "__id__": 36
+      "__id__": 44
     },
     "octree": {
-      "__id__": 37
+      "__id__": 45
     },
     "skin": {
-      "__id__": 38
+      "__id__": 46
     },
     "lightProbeInfo": {
-      "__id__": 39
+      "__id__": 47
     },
     "postSettings": {
-      "__id__": 40
+      "__id__": 48
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false
