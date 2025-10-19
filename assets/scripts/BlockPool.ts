@@ -36,14 +36,16 @@ export class BlockPool extends Component {
         console.log(`BlockPool initialized with ${this.initialPoolSize} blocks`);
     }
 
+
     /**
-     * Lấy một block từ pool, đặt kích thước và sprite ngẫu nhiên.
+     * Lấy một block từ pool, đặt kích thước và sprite.
      * @param parent Node cha để gắn block vào
      * @param width Chiều rộng mong muốn của block
      * @param height Chiều cao mong muốn của block
+     * @param spriteFrame SpriteFrame cụ thể để áp dụng. Nếu không cung cấp, sẽ chọn ngẫu nhiên.
      * @returns Block component của block được lấy ra
      */
-    spawn(parent: Node, width: number, height: number): Block {
+    spawn(parent: Node, width: number, height: number, spriteFrame?: SpriteFrame): Block {
         let blockNode: Node;
 
         if (this.pool.size() > 0) {
@@ -53,7 +55,6 @@ export class BlockPool extends Component {
             console.warn('Pool empty, created a new block. Consider increasing pool size.');
         }
 
-        // Cập nhật kích thước ngay khi lấy block ra
         const transform = blockNode.getComponent(UITransform);
         if (transform) {
             transform.setContentSize(width, height);
@@ -62,10 +63,15 @@ export class BlockPool extends Component {
         parent.addChild(blockNode);
         blockNode.active = true;
 
-        if (this.blockSprites.length > 0) {
-            const randomIndex = Math.floor(Math.random() * this.blockSprites.length);
-            const sprite = blockNode.getComponent(Sprite);
-            if (sprite) {
+        const sprite = blockNode.getComponent(Sprite);
+        if (sprite) {
+            // Ưu tiên sử dụng spriteFrame được truyền vào
+            if (spriteFrame) {
+                sprite.spriteFrame = spriteFrame;
+            }
+            // Nếu không có, mới chọn ngẫu nhiên
+            else if (this.blockSprites.length > 0) {
+                const randomIndex = Math.floor(Math.random() * this.blockSprites.length);
                 sprite.spriteFrame = this.blockSprites[randomIndex];
             }
         }
