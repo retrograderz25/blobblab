@@ -7,18 +7,6 @@
   "subMetas": {},
   "userData": {
     "isBundle": true,
-    "bundleFilterConfig": [
-      {
-        "range": "include",
-        "type": "url",
-        "patchOption": {
-          "patchType": "glob",
-          "value": "db://assets/images/**/*"
-        },
-        "assets": [
-          ""
-        ]
-      }
-    ]
+    "bundleFilterConfig": []
   }
 }
