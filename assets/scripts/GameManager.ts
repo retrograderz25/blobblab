@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys, tween, Vec3 } from 'cc';
+import { _decorator, Component, Node, Prefab, Label, UITransform, v3, instantiate, sys, tween, Vec3, director } from 'cc';
 import { Block } from './Block';
 import { SwipeDirection } from './InputManager';
 import { BlockPool } from './BlockPool';
@@ -11,6 +11,14 @@ const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
 export class GameManager extends Component {
+    @property(Node)
+    pauseButton: Node = null;
+    @property(Node)
+    pausePanel: Node = null;
+    @property(Node)
+    resumeButton: Node = null;
+    @property(Node)
+    menuButtonInPause: Node = null;
     @property(Node) boardNode: Node = null;
     @property(Node) inputManagerNode: Node = null;
     @property(BlockPool) blockPool: BlockPool = null;
@@ -30,15 +38,43 @@ export class GameManager extends Component {
     private blocks: (Block | null)[][] = [];
     private shapesOnBoard: Shape[] = [];
 
+    private isPaused: boolean = false;
+
     onLoad() {
         this.inputManagerNode.on('swipe-detected', this.handleSwipe, this);
+        this.pauseButton.on(Node.EventType.TOUCH_END, this.pauseGame, this);
+        this.resumeButton.on(Node.EventType.TOUCH_END, this.resumeGame, this);
+        this.menuButtonInPause.on(Node.EventType.TOUCH_END, this.backToMenu, this);
         const selectedSize = parseInt(sys.localStorage.getItem('selectedBoardSize') || '8');
         this.boardSize = selectedSize;
         this.highScore = parseInt(sys.localStorage.getItem(`blobblab_highscore_${this.boardSize}`) || '0');
         if (this.gameOverPanel) {
             this.gameOverPanel.node.active = false;
         }
+        if (this.pausePanel) {
+            this.pausePanel.active = false;
+        }
         this.initBoard();
+    }
+
+    backToMenu() {
+        director.loadScene('Menu');
+    }
+
+    pauseGame() {
+        if (this.isGameOver) return;
+
+        this.isPaused = true;
+        this.pausePanel.active = true;
+        // director.pause() sẽ dừng toàn bộ game, bao gồm cả animation và schedule
+        director.pause();
+    }
+
+    resumeGame() {
+        this.isPaused = false;
+        this.pausePanel.active = false;
+        // director.resume() sẽ cho game chạy lại
+        director.resume();
     }
 
     start() {
@@ -167,7 +203,7 @@ export class GameManager extends Component {
     }
 
     handleSwipe(direction: SwipeDirection) {
-        if (this.isMoving || this.isGameOver) return;
+        if (this.isMoving || this.isGameOver || this.isPaused) return;
         if (this.moveShapes(direction)) {
             this.isMoving = true;
             this.scheduleOnce(() => {
@@ -381,6 +417,9 @@ export class GameManager extends Component {
     }
 
     public forceGameOver() {
+        if (this.isPaused) {
+            this.resumeGame();
+        }
         this.endGame();
     }
 
