@@ -62,6 +62,10 @@ export class GameManager extends Component {
     }
 
     backToMenu() {
+        // Resume game trước khi chuyển scene để tránh lỗi pause
+        if (this.isPaused) {
+            director.resume();
+        }
         director.loadScene('Menu');
     }
 
