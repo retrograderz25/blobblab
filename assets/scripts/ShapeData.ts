@@ -1,51 +1,63 @@
-// Scripts/ShapeData.ts
+/**
+ * Shape Data Definitions
+ * Contains all available shape patterns for the game.
+ * Each shape is defined as a 2D array where:
+ * - 1 represents a filled cell (block)
+ * - 0 represents an empty cell
+ */
 
-// Định nghĩa các hình dạng bằng mảng 2D. Số 1 là có block, 0 là trống.
 export const SHAPES = {
-    // Chữ O (vuông 2x2)
+    /** O-shape: 2x2 square */
     O: [
         [1, 1],
         [1, 1]
     ],
-    // Chữ I (thanh dài 4 ô)
+    
+    /** I-shape: 4-cell vertical line */
     I: [
         [1],
         [1],
         [1],
         [1]
     ],
-    // Chữ T
+    
+    /** T-shape: T-tetromino */
     T: [
         [1, 1, 1],
         [0, 1, 0]
     ],
-    // Chữ L
+    
+    /** L-shape: L-tetromino */
     L: [
         [1, 0],
         [1, 0],
         [1, 1]
     ],
-    // Chữ J (L ngược)
+    
+    /** J-shape: Mirrored L-tetromino */
     J: [
         [0, 1],
         [0, 1],
         [1, 1]
     ],
-    // Chữ S
+    
+    /** S-shape: S-tetromino */
     S: [
         [0, 1, 1],
         [1, 1, 0]
     ],
-    // Chữ Z (S ngược)
+    
+    /** Z-shape: Z-tetromino */
     Z: [
         [1, 1, 0],
         [0, 1, 1]
     ],
-    // Khối 1x1
+    
+    /** Single block: 1x1 */
     SINGLE: [
         [1]
     ]
 };
 
-// Lấy danh sách tên các hình dạng để chọn ngẫu nhiên
+/** Array of shape keys for random selection */
 export const SHAPE_KEYS = Object.keys(SHAPES);

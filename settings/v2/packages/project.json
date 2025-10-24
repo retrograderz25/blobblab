@@ -3,7 +3,8 @@
   "general": {
     "designResolution": {
       "width": 720,
-      "fitHeight": true,
+      "fitHeight": false,
+      "fitWidth": false,
       "height": 1280
     },
     "downloadMaxConcurrency": 15

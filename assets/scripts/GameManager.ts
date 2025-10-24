@@ -10,38 +10,94 @@ import { NextBlockPreview } from './NextBlockPreview';
 
 const { ccclass, property } = _decorator;
 
+/**
+ * GameManager Component
+ * Core game logic controller managing the game board, shapes, scoring, and game flow.
+ * Handles shape spawning, movement, line clearing, and game state transitions.
+ */
 @ccclass('GameManager')
 export class GameManager extends Component {
+    /** UI button to pause the game */
     @property(Node)
     pauseButton: Node = null;
+    
+    /** Panel displayed when game is paused */
     @property(Node)
     pausePanel: Node = null;
+    
+    /** Button to resume from pause */
     @property(Node)
     resumeButton: Node = null;
+    
+    /** Button to return to menu from pause screen */
     @property(Node)
     menuButtonInPause: Node = null;
-    @property(Node) boardNode: Node = null;
-    @property(Node) inputManagerNode: Node = null;
-    @property(BlockPool) blockPool: BlockPool = null;
-    @property(Prefab) cellPrefab: Prefab = null;
-    @property(Label) scoreLabel: Label = null;
-    @property(GameOverUI) gameOverPanel: GameOverUI = null;
-    @property(EffectPool) effectPool: EffectPool = null;
-    @property(NextBlockPreview) nextBlockPreview: NextBlockPreview = null;
-    @property boardSize: number = 8;
+    
+    /** Container node for the game board */
+    @property(Node) 
+    boardNode: Node = null;
+    
+    /** Node managing input detection */
+    @property(Node) 
+    inputManagerNode: Node = null;
+    
+    /** Pool managing block creation and recycling */
+    @property(BlockPool) 
+    blockPool: BlockPool = null;
+    
+    /** Prefab for board cell backgrounds */
+    @property(Prefab) 
+    cellPrefab: Prefab = null;
+    
+    /** Label displaying current score */
+    @property(Label) 
+    scoreLabel: Label = null;
+    
+    /** Game over UI panel */
+    @property(GameOverUI) 
+    gameOverPanel: GameOverUI = null;
+    
+    /** Pool managing particle effects */
+    @property(EffectPool) 
+    effectPool: EffectPool = null;
+    
+    /** Component showing preview of upcoming shapes */
+    @property(NextBlockPreview) 
+    nextBlockPreview: NextBlockPreview = null;
+    
+    /** Size of the board grid (8, 12, or 16) */
+    @property 
+    boardSize: number = 8;
+    
+    /** Visual border around the board */
     @property(Node)
     boardBorder: Node = null;
 
+    /** Size of each cell in pixels */
     private cellSize: number = 0;
+    
+    /** Gap between cells in pixels */
     private spacing: number = 0;
+    
+    /** Current game score */
     private score: number = 0;
+    
+    /** Best score for current board size */
     private highScore: number = 0;
+    
+    /** Whether the game has ended */
     private isGameOver: boolean = false;
+    
+    /** Whether shapes are currently moving (prevents multiple simultaneous moves) */
     private isMoving: boolean = false;
 
+    /** 2D array representing the game board state */
     private blocks: (Block | null)[][] = [];
+    
+    /** Array of all shape groups currently on the board */
     private shapesOnBoard: Shape[] = [];
 
+    /** Whether the game is paused */
     private isPaused: boolean = false;
 
     onLoad() {
@@ -49,9 +105,11 @@ export class GameManager extends Component {
         this.pauseButton.on(Node.EventType.TOUCH_END, this.pauseGame, this);
         this.resumeButton.on(Node.EventType.TOUCH_END, this.resumeGame, this);
         this.menuButtonInPause.on(Node.EventType.TOUCH_END, this.backToMenu, this);
+        
         const selectedSize = parseInt(sys.localStorage.getItem('selectedBoardSize') || '8');
         this.boardSize = selectedSize;
         this.highScore = parseInt(sys.localStorage.getItem(`blobblab_highscore_${this.boardSize}`) || '0');
+        
         if (this.gameOverPanel) {
             this.gameOverPanel.node.active = false;
         }
@@ -61,27 +119,33 @@ export class GameManager extends Component {
         this.initBoard();
     }
 
+    /**
+     * Returns to the main menu scene
+     */
     backToMenu() {
-        // Resume game trước khi chuyển scene để tránh lỗi pause
         if (this.isPaused) {
             director.resume();
         }
         director.loadScene('Menu');
     }
 
+    /**
+     * Pauses the game and displays pause panel
+     */
     pauseGame() {
         if (this.isGameOver) return;
 
         this.isPaused = true;
         this.pausePanel.active = true;
-        // director.pause() sẽ dừng toàn bộ game, bao gồm cả animation và schedule
         director.pause();
     }
 
+    /**
+     * Resumes the game from pause state
+     */
     resumeGame() {
         this.isPaused = false;
         this.pausePanel.active = false;
-        // director.resume() sẽ cho game chạy lại
         director.resume();
     }
 
@@ -89,14 +153,22 @@ export class GameManager extends Component {
         this.startGame();
     }
 
+    /**
+     * Initializes the game board with responsive sizing
+     * Creates cell backgrounds and sets up the board grid based on screen size
+     */
     initBoard() {
         const canvasSize = this.boardNode.parent.getComponent(UITransform).contentSize;
-        const boardWidthTarget = canvasSize.width * 0.95;
-        const totalCellSize = boardWidthTarget / this.boardSize;
-        this.cellSize = totalCellSize * 0.9;
-        this.spacing = totalCellSize * 0.1;
+        
+        const availableWidth = canvasSize.width * 0.90;
+        const availableHeight = canvasSize.height * 0.65;
+        const boardSizeLimit = Math.min(availableWidth, availableHeight);
+        
+        const totalCellSize = boardSizeLimit / this.boardSize;
+        this.cellSize = totalCellSize * 0.88;
+        this.spacing = totalCellSize * 0.12;
 
-        console.log(`Responsive Board: Size=${this.boardSize}, CellSize=${this.cellSize}, Spacing=${this.spacing}`);
+        console.log(`Responsive Board: Canvas=${canvasSize.width}x${canvasSize.height}, BoardSize=${this.boardSize}, CellSize=${this.cellSize}, Spacing=${this.spacing}`);
 
         this.boardNode.removeAllChildren();
         this.blocks = [];
@@ -118,29 +190,28 @@ export class GameManager extends Component {
                 this.blocks[row][col] = null;
             }
         }
+        
+        // Draw board border
         if (this.boardBorder) {
             let graphics = this.boardBorder.getComponent(Graphics);
             if (!graphics) {
                 graphics = this.boardBorder.addComponent(Graphics);
             }
 
-            // Dọn dẹp hình vẽ cũ (nếu có)
             graphics.clear();
+            graphics.strokeColor.set(150, 150, 150, 255);
+            graphics.lineWidth = this.spacing;
 
-            // Thiết lập màu và độ dày của viền
-            graphics.strokeColor.set(150, 150, 150, 255); // Màu xám nhạt, bạn có thể đổi
-            graphics.lineWidth = this.spacing; // Độ dày bằng với khoảng trống giữa các ô
-
-            // Vẽ hình chữ nhật
             const width = this.boardNode.getComponent(UITransform).width;
             const height = this.boardNode.getComponent(UITransform).height;
             graphics.rect(-width / 2, -height / 2, width, height);
-
-            // Thực hiện vẽ
             graphics.stroke();
         }
     }
 
+    /**
+     * Starts a new game by resetting all game state
+     */
     startGame() {
         this.isGameOver = false;
         this.isMoving = false;
@@ -154,7 +225,6 @@ export class GameManager extends Component {
         }
         this.shapesOnBoard = [];
 
-        // Reset next block preview
         if (this.nextBlockPreview) {
             this.nextBlockPreview.reset();
         }
@@ -165,13 +235,16 @@ export class GameManager extends Component {
         this.scheduleOnce(() => this.updateAllBorders(), 0.3);
     }
 
+    /**
+     * Spawns a new shape on the board
+     * Uses next block preview if available, otherwise generates randomly
+     */
     spawnNewShape() {
         if (!this.blockPool || this.blockPool.blockSprites.length === 0) {
             console.error("BlockPool is not ready or has no sprites!");
             return;
         }
 
-        // Get next block from preview (or random if preview not available)
         let randomShapeKey: string;
         let randomColorSprite: any;
 
@@ -215,6 +288,11 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * Finds a random empty position where the shape can be placed
+     * @param shapeMatrix 2D array representing the shape
+     * @returns Position {row, col} or null if no space available
+     */
     findEmptySpotForShape(shapeMatrix: number[][]): { row: number, col: number } | null {
         const shapeHeight = shapeMatrix.length;
         const shapeWidth = shapeMatrix[0].length;
@@ -234,6 +312,13 @@ export class GameManager extends Component {
         return null;
     }
 
+    /**
+     * Checks if a shape can be placed at the specified position
+     * @param shapeMatrix Shape to check
+     * @param startRow Starting row position
+     * @param startCol Starting column position
+     * @returns True if the shape fits without collision
+     */
     canPlaceShapeAt(shapeMatrix: number[][], startRow: number, startCol: number): boolean {
         for (let r = 0; r < shapeMatrix.length; r++) {
             for (let c = 0; c < shapeMatrix[r].length; c++) {
@@ -247,6 +332,10 @@ export class GameManager extends Component {
         return true;
     }
 
+    /**
+     * Handles swipe input and triggers shape movement
+     * @param direction Direction of the swipe
+     */
     handleSwipe(direction: SwipeDirection) {
         if (this.isMoving || this.isGameOver || this.isPaused) return;
         if (this.moveShapes(direction)) {
@@ -265,6 +354,12 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * Moves all shapes in the specified direction
+     * Implements gravity-like behavior where shapes slide as far as possible
+     * @param direction Direction to move shapes
+     * @returns True if any shape moved
+     */
     moveShapes(direction: SwipeDirection): boolean {
         let hasMovedOverall = false;
         let dr = 0, dc = 0;
@@ -274,12 +369,12 @@ export class GameManager extends Component {
         if (direction === SwipeDirection.LEFT) dc = -1;
         if (direction === SwipeDirection.RIGHT) dc = 1;
 
-        // Lặp lại việc di chuyển từng bước cho đến khi không còn khối nào có thể di chuyển
+        // Continuously move shapes until no more movement is possible
         while (true) {
             let movedInThisStep = false;
             const shapesToMove: Shape[] = [];
 
-            // 1. Xác định tất cả các shape CÓ THỂ di chuyển một bước trong vòng lặp này
+            // Identify all shapes that can move one step
             for (const shape of this.shapesOnBoard) {
                 let canMove = true;
                 if (shape.childBlocks.length === 0) continue;
@@ -288,13 +383,13 @@ export class GameManager extends Component {
                     const nextRow = block.row + dr;
                     const nextCol = block.col + dc;
 
-                    // Kiểm tra va chạm với tường
+                    // Check wall collision
                     if (nextRow < 0 || nextRow >= this.boardSize || nextCol < 0 || nextCol >= this.boardSize) {
                         canMove = false;
                         break;
                     }
 
-                    // Kiểm tra va chạm với các block khác
+                    // Check collision with other shapes
                     const obstacle = this.blocks[nextRow][nextCol];
                     if (obstacle && obstacle.parentShape.id !== shape.id) {
                         canMove = false;
@@ -307,13 +402,13 @@ export class GameManager extends Component {
                 }
             }
 
-            // 2. Nếu có shape để di chuyển, hãy thực hiện
+            // Move all movable shapes one step
             if (shapesToMove.length > 0) {
                 movedInThisStep = true;
                 hasMovedOverall = true;
 
                 for (const shape of shapesToMove) {
-                    // Sắp xếp các block con để cập nhật lưới logic chính xác
+                    // Sort blocks to update grid correctly based on direction
                     const sortedChildBlocks = [...shape.childBlocks].sort((a, b) => {
                         if (dr === 1) return b.row - a.row;
                         if (dr === -1) return a.row - b.row;
@@ -325,25 +420,24 @@ export class GameManager extends Component {
                     for (const block of sortedChildBlocks) {
                         const oldRow = block.row;
                         const oldCol = block.col;
-                        this.blocks[oldRow][oldCol] = null; // Dọn ô cũ
+                        this.blocks[oldRow][oldCol] = null;
                     }
                     for (const block of sortedChildBlocks) {
                         const newRow = block.row + dr;
                         const newCol = block.col + dc;
                         block.row = newRow;
                         block.col = newCol;
-                        this.blocks[newRow][newCol] = block; // Đặt vào ô mới
+                        this.blocks[newRow][newCol] = block;
                     }
                 }
             }
 
-            // 3. Nếu trong vòng lặp này không có khối nào di chuyển, dừng lại
             if (!movedInThisStep) {
                 break;
             }
         }
 
-        // 4. Sau khi đã xác định vị trí cuối cùng, cập nhật vị trí trực quan cho tất cả
+        // Update visual positions after all movement calculations
         if (hasMovedOverall) {
             for (const shape of this.shapesOnBoard) {
                 for (const block of shape.childBlocks) {
@@ -354,6 +448,10 @@ export class GameManager extends Component {
 
         return hasMovedOverall;
     }
+    /**
+     * Checks for complete rows/columns and clears them
+     * Cleared blocks are removed with particle effects and scoring is updated
+     */
     checkAndClearLines() {
         const rowsToClear: number[] = [], colsToClear: number[] = [];
         for (let r = 0; r < this.boardSize; r++) { if (this.blocks[r] && this.blocks[r].every(b => !!b)) rowsToClear.push(r); }
@@ -382,6 +480,11 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * Restructures shapes after blocks are removed
+     * Splits shapes that have become disconnected into separate shape groups
+     * Uses flood fill algorithm to identify connected components
+     */
     restructureShapes() {
         const newShapes: Shape[] = [];
         const visited: Set<Block> = new Set();
@@ -414,26 +517,27 @@ export class GameManager extends Component {
         this.shapesOnBoard = newShapes;
     }
 
+    /**
+     * Updates border visibility for all blocks on the board
+     * Borders are shown between blocks of the same shape to create visual cohesion
+     */
     updateAllBorders() {
         for (let r = 0; r < this.boardSize; r++) {
             for (let c = 0; c < this.boardSize; c++) {
                 const block = this.blocks[r][c];
                 if (!block) continue;
 
-                // Kiểm tra 4 ô xung quanh
                 const topBlock = (r > 0) ? this.blocks[r - 1][c] : null;
                 const bottomBlock = (r < this.boardSize - 1) ? this.blocks[r + 1][c] : null;
                 const leftBlock = (c > 0) ? this.blocks[r][c - 1] : null;
                 const rightBlock = (c < this.boardSize - 1) ? this.blocks[r][c + 1] : null;
 
-                // LOGIC ĐẢO NGƯỢC
-                // Mặc định, tất cả các viền đều TẮT (không hiển thị khoảng trống)
+                // Show borders only between blocks of the same shape
                 let showTop = false;
                 let showBottom = false;
                 let showLeft = false;
                 let showRight = false;
 
-                // Chỉ BẬT viền nếu ô bên cạnh tồn tại VÀ thuộc cùng một Shape
                 if (topBlock && topBlock.parentShape.id === block.parentShape.id) {
                     showTop = true;
                 }
@@ -452,27 +556,10 @@ export class GameManager extends Component {
         }
     }
 
-    // updateAllBorders() {
-    //     for (let r = 0; r < this.boardSize; r++) {
-    //         for (let c = 0; c < this.boardSize; c++) {
-    //             const block = this.blocks[r][c];
-    //             if (!block) continue;
-
-    //             const topBlock = (r > 0) ? this.blocks[r - 1][c] : null;
-    //             const bottomBlock = (r < this.boardSize - 1) ? this.blocks[r + 1][c] : null;
-    //             const leftBlock = (c > 0) ? this.blocks[r][c - 1] : null;
-    //             const rightBlock = (c < this.boardSize - 1) ? this.blocks[r][c + 1] : null;
-
-    //             let showTop = !topBlock || topBlock.parentShape.id !== block.parentShape.id;
-    //             let showBottom = !bottomBlock || bottomBlock.parentShape.id !== block.parentShape.id;
-    //             let showLeft = !leftBlock || leftBlock.parentShape.id !== block.parentShape.id;
-    //             let showRight = !rightBlock || rightBlock.parentShape.id !== block.parentShape.id;
-
-    //             block.updateBorders(showTop, showBottom, showLeft, showRight);
-    //         }
-    //     }
-    // }
-
+    /**
+     * Checks if the game is over (no space for new shapes)
+     * @returns True if game is over
+     */
     checkGameOver(): boolean {
         if (this.isGameOver) return true;
 
@@ -484,6 +571,9 @@ export class GameManager extends Component {
         return false;
     }
 
+    /**
+     * Ends the game and displays game over screen
+     */
     endGame() {
         if (this.isGameOver) return;
         this.isGameOver = true;
@@ -499,6 +589,9 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * Forces game over (called externally if needed)
+     */
     public forceGameOver() {
         if (this.isPaused) {
             this.resumeGame();
@@ -506,6 +599,11 @@ export class GameManager extends Component {
         this.endGame();
     }
 
+    /**
+     * Updates the visual position of a block on the board
+     * @param blockComp Block component to update
+     * @param isAnimated Whether to animate the position change
+     */
     updateBlockPosition(blockComp: Block, isAnimated: boolean = true) {
         const boardActualWidth = this.boardSize * (this.cellSize + this.spacing) - this.spacing;
         const startX = -boardActualWidth / 2 + this.cellSize / 2;
@@ -520,6 +618,10 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * Updates the displayed score
+     * @param newScore New score value
+     */
     updateScore(newScore: number) {
         this.score = newScore;
         this.scoreLabel.string = `${this.score}`;

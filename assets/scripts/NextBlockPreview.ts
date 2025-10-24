@@ -42,7 +42,7 @@ export class NextBlockPreview extends Component {
     }
 
     /**
-     * Generate queue of next blocks
+     * Generates a queue of upcoming blocks
      */
     public generateNextBlocks() {
         this.nextBlocks = [];
@@ -54,12 +54,12 @@ export class NextBlockPreview extends Component {
     }
 
     /**
-     * Get the next block from queue and generate a new one
+     * Retrieves the next block from the queue and generates a replacement
+     * @returns Next block data containing shape key and sprite
      */
     public getNextBlock(): { shapeKey: string, sprite: SpriteFrame } {
         const nextBlock = this.nextBlocks.shift();
 
-        // Generate a new block to replace it
         const randomShapeKey = SHAPE_KEYS[Math.floor(Math.random() * SHAPE_KEYS.length)];
         const randomSprite = this.blockSprites[Math.floor(Math.random() * this.blockSprites.length)];
         this.nextBlocks.push({ shapeKey: randomShapeKey, sprite: randomSprite });
@@ -69,14 +69,15 @@ export class NextBlockPreview extends Component {
     }
 
     /**
-     * Peek at next block without removing it
+     * Peeks at the next block without removing it from the queue
+     * @returns Next block data
      */
     public peekNextBlock(): { shapeKey: string, sprite: SpriteFrame } {
         return this.nextBlocks[0];
     }
 
     /**
-     * Render all preview blocks
+     * Renders visual previews of all queued blocks
      */
     private renderPreviews() {
         // Clear existing previews
@@ -93,7 +94,6 @@ export class NextBlockPreview extends Component {
             const blockData = this.nextBlocks[i];
             const shapeMatrix = SHAPES[blockData.shapeKey];
 
-            // Create container for this preview
             const previewNode = new Node(`Preview_${i}`);
             this.previewContainer.addChild(previewNode);
             this.previewNodes.push(previewNode);
@@ -101,14 +101,11 @@ export class NextBlockPreview extends Component {
             const shapeHeight = shapeMatrix.length;
             const shapeWidth = shapeMatrix[0].length;
 
-            // Calculate preview size
             const previewWidth = shapeWidth * (this.previewCellSize + this.previewSpacing) - this.previewSpacing;
             const previewHeight = shapeHeight * (this.previewCellSize + this.previewSpacing) - this.previewSpacing;
 
-            // Set position (stack vertically)
             previewNode.setPosition(v3(0, currentY - previewHeight / 2, 0));
 
-            // Create blocks for this shape
             const startX = -previewWidth / 2 + this.previewCellSize / 2;
             const startY = previewHeight / 2 - this.previewCellSize / 2;
 
@@ -125,13 +122,14 @@ export class NextBlockPreview extends Component {
                 }
             }
 
-            // Update Y position for next preview
-            currentY -= (previewHeight + 40); // 40 is spacing between previews
+            currentY -= (previewHeight + 40);
         }
     }
 
     /**
-     * Create a single preview cell
+     * Creates a single preview cell with the specified sprite
+     * @param sprite Sprite frame to apply to the cell
+     * @returns Created preview cell node
      */
     private createPreviewCell(sprite: SpriteFrame): Node {
         let cell: Node;
@@ -139,7 +137,6 @@ export class NextBlockPreview extends Component {
         if (this.blockPrefab) {
             cell = instantiate(this.blockPrefab);
 
-            // Hide all borders in preview
             const blockComp = cell.getComponent(Block);
             if (blockComp) {
                 blockComp.updateBorders(false, false, false, false);
@@ -158,14 +155,13 @@ export class NextBlockPreview extends Component {
             spriteComp.spriteFrame = sprite;
         }
 
-        // Make preview slightly transparent
         cell.setScale(Vec3.ONE.clone().multiplyScalar(0.8));
 
         return cell;
     }
 
     /**
-     * Clear all preview nodes
+     * Clears all preview nodes from the container
      */
     private clearPreviews() {
         for (const node of this.previewNodes) {
@@ -175,7 +171,7 @@ export class NextBlockPreview extends Component {
     }
 
     /**
-     * Reset preview system
+     * Resets the preview system by regenerating and rendering blocks
      */
     public reset() {
         this.generateNextBlocks();

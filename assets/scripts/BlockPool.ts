@@ -3,21 +3,28 @@ import { Block } from './Block';
 const { ccclass, property } = _decorator;
 
 /**
- * BlockPool quản lý việc tạo và tái sử dụng blocks
- * Sử dụng object pooling pattern để tối ưu hiệu suất
+ * BlockPool Component
+ * Manages creation and reuse of block nodes using object pooling pattern.
+ * This optimization reduces memory allocation overhead by recycling nodes instead of creating new ones.
  */
 @ccclass('BlockPool')
 export class BlockPool extends Component {
+    /** Prefab template for creating block instances */
     @property(Prefab)
     blockPrefab: Prefab = null;
 
+    /** Array of available sprite frames for block visual variety */
     @property([SpriteFrame])
     blockSprites: SpriteFrame[] = [];
 
+    /** Number of blocks to pre-instantiate in the pool */
     @property
     initialPoolSize: number = 20;
 
+    /** Object pool for storing inactive block nodes */
     private pool: NodePool = null;
+    
+    /** Array tracking currently active blocks in the game */
     private activeBlocks: Node[] = [];
 
     onLoad() {
@@ -25,7 +32,7 @@ export class BlockPool extends Component {
     }
 
     /**
-     * Khởi tạo pool với số lượng block ban đầu
+     * Initializes the pool with pre-instantiated blocks
      */
     private initPool() {
         this.pool = new NodePool();
@@ -36,14 +43,14 @@ export class BlockPool extends Component {
         console.log(`BlockPool initialized with ${this.initialPoolSize} blocks`);
     }
 
-
     /**
-     * Lấy một block từ pool, đặt kích thước và sprite.
-     * @param parent Node cha để gắn block vào
-     * @param width Chiều rộng mong muốn của block
-     * @param height Chiều cao mong muốn của block
-     * @param spriteFrame SpriteFrame cụ thể để áp dụng. Nếu không cung cấp, sẽ chọn ngẫu nhiên.
-     * @returns Block component của block được lấy ra
+     * Retrieves a block from the pool and configures it
+     * @param parent Parent node to attach the block to
+     * @param width Desired width of the block
+     * @param height Desired height of the block
+     * @param spriteFrame Specific sprite frame to apply. If not provided, a random one is selected
+     * @param spacing Cell spacing for border sizing
+     * @returns Block component of the spawned block
      */
     spawn(parent: Node, width: number, height: number, spriteFrame?: SpriteFrame, spacing?: number): Block {
         let blockNode: Node;
@@ -70,12 +77,9 @@ export class BlockPool extends Component {
 
         const sprite = blockNode.getComponent(Sprite);
         if (sprite) {
-            // Ưu tiên sử dụng spriteFrame được truyền vào
             if (spriteFrame) {
                 sprite.spriteFrame = spriteFrame;
-            }
-            // Nếu không có, mới chọn ngẫu nhiên
-            else if (this.blockSprites.length > 0) {
+            } else if (this.blockSprites.length > 0) {
                 const randomIndex = Math.floor(Math.random() * this.blockSprites.length);
                 sprite.spriteFrame = this.blockSprites[randomIndex];
             }
@@ -86,8 +90,8 @@ export class BlockPool extends Component {
     }
 
     /**
-     * Trả block về pool để tái sử dụng
-     * @param blockNode Node của block cần trả về
+     * Returns a block to the pool for reuse
+     * @param blockNode Block node to despawn
      */
     despawn(blockNode: Node) {
         if (!blockNode || !blockNode.isValid) return;
@@ -103,23 +107,20 @@ export class BlockPool extends Component {
             blockComp.col = 0;
         }
 
-        // Không cần tách khỏi parent nếu dùng NodePool, chỉ cần put là đủ
-        // blockNode.removeFromParent();
-
-        blockNode.active = false; // Nên tắt active trước khi trả về pool
+        blockNode.active = false;
         this.pool.put(blockNode);
     }
 
     /**
-     * Trả nhiều blocks về pool cùng lúc
-     * @param blockNodes Mảng các Node cần trả về
+     * Returns multiple blocks to the pool at once
+     * @param blockNodes Array of block nodes to despawn
      */
     despawnMultiple(blockNodes: Node[]) {
         blockNodes.forEach(node => this.despawn(node));
     }
 
     /**
-     * Xóa toàn bộ active blocks và trả về pool
+     * Despawns all active blocks and returns them to the pool
      */
     despawnAll() {
         const blocksToRemove = [...this.activeBlocks];
@@ -127,21 +128,23 @@ export class BlockPool extends Component {
     }
 
     /**
-     * Lấy số lượng block đang active
+     * Gets the number of currently active blocks
+     * @returns Active block count
      */
     getActiveCount(): number {
         return this.activeBlocks.length;
     }
 
     /**
-     * Lấy số lượng block đang trong pool (sẵn sàng tái sử dụng)
+     * Gets the number of blocks available in the pool
+     * @returns Pool size
      */
     getPoolSize(): number {
         return this.pool.size();
     }
 
     /**
-     * Clear toàn bộ pool (dùng khi restart game hoặc chuyển scene)
+     * Clears the entire pool (use when restarting game or changing scenes)
      */
     clearPool() {
         this.despawnAll();

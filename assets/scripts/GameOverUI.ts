@@ -1,31 +1,40 @@
 import { _decorator, Component, Node, Label, director } from 'cc';
 const { ccclass, property } = _decorator;
 
+/**
+ * GameOverUI Component
+ * Manages the game over screen UI, displaying score and providing restart/menu options
+ */
 @ccclass('GameOverUI')
 export class GameOverUI extends Component {
+    /** Label displaying final score and high score */
     @property(Label)
     scoreInfoLabel: Label = null;
 
+    /** Button to restart the current game */
     @property(Node)
     restartButton: Node = null;
 
+    /** Button to return to main menu */
     @property(Node)
     menuButton: Node = null;
 
     onLoad() {
-        // Đăng ký sự kiện click cho nút
         this.restartButton.on(Node.EventType.TOUCH_END, this.onRestart, this);
         this.menuButton.on(Node.EventType.TOUCH_END, this.onBackToMenu, this);
     }
 
+    /**
+     * Returns to the main menu scene
+     */
     onBackToMenu() {
         director.loadScene('Menu');
     }
 
     /**
-     * Hiển thị panel với điểm số
-     * @param score Điểm hiện tại
-     * @param highScore Điểm cao nhất
+     * Displays the game over panel with score information
+     * @param score Final score achieved
+     * @param highScore Current high score
      */
     show(score: number, highScore: number) {
         this.node.active = true;
@@ -33,17 +42,16 @@ export class GameOverUI extends Component {
     }
 
     /**
-     * Ẩn panel
+     * Hides the game over panel
      */
     hide() {
         this.node.active = false;
     }
 
     /**
-     * Hàm được gọi khi nhấn nút Restart
+     * Restarts the game by reloading the current scene
      */
     onRestart() {
-        // Tải lại scene hiện tại
         director.loadScene(director.getScene().name);
     }
 }
