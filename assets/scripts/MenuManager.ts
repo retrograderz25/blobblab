@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, director, sys } from 'cc';
+import { _decorator, Component, Node, director, sys, Camera, Color } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('MenuManager')
@@ -13,7 +13,18 @@ export class MenuManager extends Component {
     @property(Node)
     hardButton: Node = null;
 
+    @property(Camera)
+    mainCamera: Camera = null;
+
+    @property({ type: Color })
+    backgroundColor: Color = new Color(40, 44, 52, 255);
+
     onLoad() {
+        // Set background color
+        if (this.mainCamera) {
+            this.mainCamera.backgroundColor = this.backgroundColor;
+        }
+
         // Gán sự kiện click cho từng nút
         this.easyButton.on(Node.EventType.TOUCH_END, () => this.onModeSelected(8), this);
         this.mediumButton.on(Node.EventType.TOUCH_END, () => this.onModeSelected(12), this);

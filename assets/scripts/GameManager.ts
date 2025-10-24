@@ -6,6 +6,7 @@ import { GameOverUI } from './GameOverUI';
 import { EffectPool } from './EffectPool';
 import { Shape } from './Shape';
 import { SHAPES, SHAPE_KEYS } from './ShapeData';
+import { NextBlockPreview } from './NextBlockPreview';
 
 const { ccclass, property } = _decorator;
 
@@ -26,6 +27,7 @@ export class GameManager extends Component {
     @property(Label) scoreLabel: Label = null;
     @property(GameOverUI) gameOverPanel: GameOverUI = null;
     @property(EffectPool) effectPool: EffectPool = null;
+    @property(NextBlockPreview) nextBlockPreview: NextBlockPreview = null;
     @property boardSize: number = 8;
     @property(Node)
     boardBorder: Node = null;
@@ -148,6 +150,11 @@ export class GameManager extends Component {
         }
         this.shapesOnBoard = [];
 
+        // Reset next block preview
+        if (this.nextBlockPreview) {
+            this.nextBlockPreview.reset();
+        }
+
         this.updateScore(0);
         this.spawnNewShape();
 
@@ -160,14 +167,25 @@ export class GameManager extends Component {
             return;
         }
 
-        const randomShapeKey = SHAPE_KEYS[Math.floor(Math.random() * SHAPE_KEYS.length)];
+        // Get next block from preview (or random if preview not available)
+        let randomShapeKey: string;
+        let randomColorSprite: any;
+
+        if (this.nextBlockPreview) {
+            const nextBlock = this.nextBlockPreview.getNextBlock();
+            randomShapeKey = nextBlock.shapeKey;
+            randomColorSprite = nextBlock.sprite;
+        } else {
+            randomShapeKey = SHAPE_KEYS[Math.floor(Math.random() * SHAPE_KEYS.length)];
+            const blockSprites = this.blockPool.blockSprites;
+            randomColorSprite = blockSprites[Math.floor(Math.random() * blockSprites.length)];
+        }
+
         const shapeMatrix = SHAPES[randomShapeKey];
         const emptySpot = this.findEmptySpotForShape(shapeMatrix);
 
         if (emptySpot) {
             const newShape = new Shape();
-            const blockSprites = this.blockPool.blockSprites;
-            const randomColorSprite = blockSprites[Math.floor(Math.random() * blockSprites.length)];
 
             for (let r = 0; r < shapeMatrix.length; r++) {
                 for (let c = 0; c < shapeMatrix[r].length; c++) {
