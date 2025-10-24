@@ -154,21 +154,20 @@ export class GameManager extends Component {
     }
 
     /**
-     * Initializes the game board with responsive sizing
-     * Creates cell backgrounds and sets up the board grid based on screen size
+     * Initializes the game board with fixed sizing
+     * Creates cell backgrounds and sets up the board grid
      */
     initBoard() {
-        const canvasSize = this.boardNode.parent.getComponent(UITransform).contentSize;
+        const designWidth = 720;
+        const designHeight = 1280;
         
-        const availableWidth = canvasSize.width * 0.90;
-        const availableHeight = canvasSize.height * 0.65;
+        const availableWidth = designWidth * 0.90;
+        const availableHeight = designHeight * 0.60;
         const boardSizeLimit = Math.min(availableWidth, availableHeight);
         
         const totalCellSize = boardSizeLimit / this.boardSize;
         this.cellSize = totalCellSize * 0.88;
         this.spacing = totalCellSize * 0.12;
-
-        console.log(`Responsive Board: Canvas=${canvasSize.width}x${canvasSize.height}, BoardSize=${this.boardSize}, CellSize=${this.cellSize}, Spacing=${this.spacing}`);
 
         this.boardNode.removeAllChildren();
         this.blocks = [];
