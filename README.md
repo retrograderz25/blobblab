@@ -282,7 +282,7 @@ If you encounter bugs or have feature requests:
 
 - **Inspiration**: Block Blast, 2048, and classic Tetris
 - **Engine**: [Cocos Creator](https://www.cocos.com/en/creator) by Cocos
-- **Artwork**: Custom assets created for this project
+- **Artwork**: Thanks to [tokaa1's blockerino](https://github.com/tokaa1/blockerino)
 - **Community**: Special thanks to the Cocos Creator community for resources and support
 
 ---
